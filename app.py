@@ -1,5 +1,5 @@
 import streamlit as st
-from trendanalyser import run_agent
+from venture_studio import run_agent
 
 # --------------------------------------------------
 # PAGE CONFIG

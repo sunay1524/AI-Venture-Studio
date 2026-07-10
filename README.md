@@ -206,9 +206,4 @@ This project is licensed under the MIT License.
 **Sunay Goyal**
 
 Engineering Student | AI & Backend Enthusiast
-
-GitHub: https://github.com/<your-username>
-
-LinkedIn: https://linkedin.com/in/<your-linkedin>
-
 ---
