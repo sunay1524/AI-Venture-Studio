@@ -1,127 +1,269 @@
 # 🚀 AI Venture Studio
 
-An intelligent **multi-agent startup consulting platform** built using **LangGraph**, **Google Gemini**, and **Streamlit**.
+> An intelligent multi-agent startup consultant built using **LangGraph**, **Gemini**, **Tavily**, **Streamlit**, and **Pydantic Structured Outputs**.
 
-AI Venture Studio simulates a team of startup consultants by orchestrating multiple AI agents that collaboratively evaluate a startup idea, perform research, validate feasibility, assess risks, and generate an investor-ready pitch.
-
----
-
-## ✨ Features
-
-- 🧠 Supervisor (Venture Manager) Agent
-- 📈 Market Research Agent
-- 🏢 Competitor Analysis Agent
-- 👥 Customer Research Agent
-- 💼 Business Model Generator
-- 🏗 Technical Architecture Validator
-- ⚠ Risk Analysis Agent
-- 🎤 Investor Pitch Deck Generator
-- 🔄 Streaming Multi-Agent Workflow
-- 📊 Interactive Streamlit Dashboard
-
----
-
-## 🏛 Architecture
-
-```
-                           User Idea
-                               │
-                               ▼
-                     Venture Manager Agent
-                               │
-        ┌───────────────┬───────────────┬───────────────┐
-        ▼               ▼               ▼
- Market Research   Competitor Analysis   Customer Research
-        │               │               │
-        └───────────────┴───────────────┘
-                        ▼
-                 Business Model Agent
-                        ▼
-           Technical Architecture Agent
-                        ▼
-               Risk Analysis Agent
-                        ▼
-                Pitch Deck Generator
-                        ▼
-                 Final Startup Report
-```
-
----
-
-## 🛠 Tech Stack
-
-### AI Framework
-
-- LangGraph
-- LangChain
-- Google Gemini 2.5 Flash Lite
-- Pydantic Structured Outputs
-
-### Frontend
-
-- Streamlit
-
-### Language
-
-- Python 3.13+
-
----
-
-## 📋 Workflow
-
-1. User enters a startup idea.
-2. Venture Manager decomposes the problem into specialized tasks.
-3. Three research agents execute in parallel:
-   - Market Research
-   - Competitor Analysis
-   - Customer Research
-4. Business Model Agent synthesizes the research.
-5. Technical Architecture Agent evaluates implementation feasibility.
-6. Risk Analysis Agent identifies technical and business risks.
-7. Pitch Deck Agent generates an investor-ready startup pitch.
+AI Venture Studio transforms a startup idea into a comprehensive investor-ready business report by orchestrating multiple AI agents that collaborate, use external tools, validate decisions, and generate structured insights.
 
 ---
 
 ## 📸 Demo
 
-*(Add screenshots or GIF here)*
+> **Live Demo:** https://ai-venture-studio-cppaxvpdm5mtvqcsyddejg.streamlit.app/
 
-Example:
+> **GitHub:** https://github.com/sunay1524/AI-Venture-Studio
+
+---
+
+# ✨ Features
+
+✅ Multi-Agent Architecture using LangGraph
+
+✅ Parallel Agent Execution
+
+✅ Conditional Routing
+
+✅ Tool-Using AI Agents
+
+✅ Structured Outputs (Pydantic)
+
+✅ Market Research using Tavily
+
+✅ Competitor Analysis using Tavily
+
+✅ Customer Research using Reddit Discussions
+
+✅ Automatic Business Model Generation
+
+✅ Technical Architecture Recommendation
+
+✅ Risk Analysis
+
+✅ Investor Pitch Deck Generation
+
+✅ Interactive Streamlit Dashboard
+
+---
+
+# 🧠 Architecture
 
 ```
-assets/demo.gif
+
+                     User Idea
+                         │
+                         ▼
+                Venture Manager Agent
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+ Market Research   Competitor Analysis  Customer Research
+      (Tavily)         (Tavily)      (Reddit + Tavily)
+        │                │                │
+        └────────────────┼────────────────┘
+                         ▼
+                Business Model Agent
+                         │
+                         ▼
+            Technical Architecture Agent
+                         │
+          Feasible? ─────┴─────── No
+                │                 ▲
+               Yes                │
+                ▼                 │
+             Risk Analysis Agent──┘
+                │
+      Acceptable Risk?
+          │            │
+         Yes          No
+          │            ▲
+          ▼            │
+     Pitch Deck Agent──┘
+          │
+          ▼
+    Investor Ready Report
+
 ```
 
 ---
 
-## ⚙ Installation
+# 🤖 Agents
+
+## 🚀 Venture Manager
+
+Breaks down the startup idea into specialized tasks and delegates work to downstream agents.
+
+---
+
+## 📈 Market Research Agent
+
+Uses **Tavily Search** to retrieve:
+
+- Market Size
+- CAGR
+- Industry Trends
+- Growth Opportunities
+- Challenges
+
+---
+
+## 🏢 Competitor Analysis Agent
+
+Performs live competitor research using Tavily.
+
+Analyzes:
+
+- Direct Competitors
+- Indirect Competitors
+- Pricing
+- Business Models
+- Competitive Advantages
+
+---
+
+## 👥 Customer Research Agent
+
+Uses Reddit discussions (via Tavily Search) to discover:
+
+- Customer Personas
+- Pain Points
+- Feature Requests
+- Buying Motivation
+- Objections
+
+---
+
+## 💼 Business Model Agent
+
+Creates:
+
+- Revenue Model
+- Pricing Strategy
+- Value Proposition
+- Go-To-Market Strategy
+
+---
+
+## 🏗 Technical Architecture Agent
+
+Designs the technical solution including:
+
+- Tech Stack
+- System Components
+- APIs
+- Scalability
+- Deployment Strategy
+
+---
+
+## ⚠ Risk Analysis Agent
+
+Evaluates:
+
+- Business Risk
+- Technical Risk
+- Financial Risk
+- Market Risk
+
+If risk exceeds acceptable limits, the workflow automatically loops back to improve the business model.
+
+---
+
+## 🎤 Pitch Deck Agent
+
+Produces an investor-ready startup summary including:
+
+- Executive Summary
+- Problem Statement
+- Solution
+- Market Opportunity
+- Business Model
+- Competitive Advantage
+- Investment Highlights
+
+---
+
+# 🔁 Workflow
+
+```
+
+User Idea
+
+↓
+
+Venture Manager
+
+↓
+
+Parallel Research
+
+↓
+
+Business Model
+
+↓
+
+Technical Review
+
+↓
+
+Risk Analysis
+
+↓
+
+Conditional Retry (if required)
+
+↓
+
+Pitch Deck
+
+↓
+
+Final Report
+
+```
+
+---
+
+# 🛠 Tech Stack
+
+| Category | Technologies |
+|-----------|--------------|
+| Language | Python |
+| Agent Framework | LangGraph |
+| LLM | Gemini 2.5 Flash |
+| AI Framework | LangChain |
+| Search Tool | Tavily |
+| Customer Research | Reddit Search |
+| Frontend | Streamlit |
+| Data Validation | Pydantic |
+| Workflow | Stateful Graph |
+| Environment | Python + dotenv |
+
+---
+
+# 📂 Project Structure
+
+```
+
+AI-Venture-Studio
+
+├── app.py
+├── venture_studio.py
+├── requirements.txt
+├── README.md
+├── .env
+└── assets/
+
+```
+
+---
+
+# 🚀 Getting Started
 
 Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/AI-Venture-Studio.git
-
+git clone https://github.com/sunay1524/AI-Venture-Studio.git
 cd AI-Venture-Studio
-```
-
-Create a virtual environment
-
-```bash
-python -m venv newenv
-```
-
-Activate
-
-### macOS/Linux
-
-```bash
-source newenv/bin/activate
-```
-
-### Windows
-
-```bash
-newenv\Scripts\activate
 ```
 
 Install dependencies
@@ -130,20 +272,14 @@ Install dependencies
 pip install -r requirements.txt
 ```
 
----
-
-## 🔑 Environment Variables
-
-Create a `.env` file
+Create a `.env`
 
 ```text
-GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
-TAVILY_API_KEY=YOUR_TAVILY_API_KEY
+GOOGLE_API_KEY=YOUR_KEY
+TAVILY_API_KEY=YOUR_KEY
 ```
 
----
-
-## ▶ Run
+Run
 
 ```bash
 streamlit run app.py
@@ -151,59 +287,47 @@ streamlit run app.py
 
 ---
 
-## 📂 Project Structure
+# 📊 Example Startup Ideas
 
-```
-AI-Venture-Studio/
-
-│── app.py
-│── trendanalyser.py
-│── requirements.txt
-│── README.md
-│── .env.example
-│── assets/
-```
+- AI Interview Coach
+- AI Legal Assistant
+- Smart Farming Platform
+- AI Healthcare Assistant
+- AI Finance Advisor
+- Creator Marketplace
 
 ---
 
-## 📌 Example Startup Idea
+# 🎯 Future Improvements
 
-> Build an AI-powered interview preparation platform that conducts realistic mock interviews, analyzes resumes against job descriptions, identifies skill gaps, recommends personalized learning resources, and helps universities improve placement rates through AI-driven career coaching.
-
----
-
-## 🚀 Future Improvements
-
-- Real-time Tavily Web Search
-- Source Citations
 - PDF Report Export
-- Investor Review Agent
+- Investor Score
 - Financial Projection Agent
-- Startup Valuation Agent
-- Multi-thread Memory
-- Authentication
-- Docker Deployment
-- FastAPI Backend
+- Live Citations
+- PowerPoint Generation
+- Multi-language Support
+- Memory Support
+- Crew Collaboration Dashboard
 
 ---
 
-## 🤝 Contributing
+# 📚 What I Learned
 
-Contributions are welcome!
+Building AI Venture Studio helped me gain hands-on experience with:
 
-Feel free to open Issues or Pull Requests.
+- Multi-Agent AI Systems
+- Agent Orchestration
+- LangGraph
+- Structured Outputs
+- Conditional Graph Routing
+- Parallel Agent Execution
+- Tool-Using AI Agents
+- Prompt Engineering
+- Streamlit Deployment
+- Production AI Workflow Design
 
 ---
 
-## 📜 License
+# ⭐ If you found this project interesting
 
-This project is licensed under the MIT License.
-
----
-
-## 👨‍💻 Author
-
-**Sunay Goyal**
-
-Engineering Student | AI & Backend Enthusiast
----
+Please consider starring the repository!
