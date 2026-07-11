@@ -9,8 +9,78 @@ from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
-
+from langchain_tavily import TavilySearch
 load_dotenv()
+
+
+market_search_tool = TavilySearch(max_results=3)
+competitor_search_tool = TavilySearch(max_results=3)
+customer_search_tool = TavilySearch(max_results=3)
+
+def search_reddit(queries):
+
+    discussions = []
+
+    for query in queries:
+
+        search = customer_search_tool.invoke(
+            f"site:reddit.com {query}"
+        )
+
+        discussions.append(search)
+
+    return discussions
+
+
+class RedditQueries(BaseModel):
+
+    queries: list[str]
+
+
+def search_competitors(idea: str):
+
+    query = f"""
+    Startup Idea:
+
+    {idea}
+
+    Find:
+
+    - Top competitors
+    - Their strengths
+    - Weaknesses
+    - Pricing
+    - Funding
+    - Features
+    """
+
+    return str(competitor_search_tool.invoke(query))
+
+def search_market_data(idea: str) -> str:
+    """
+    Searches the web for the latest market information
+    related to the startup idea.
+    """
+
+    query = f"""
+    Startup Idea:
+    {idea}
+
+    Find:
+
+    - Current market size
+    - CAGR (Growth Rate)
+    - Major industry trends
+    - Market opportunities
+    - Challenges
+    - Recent developments
+
+    Prefer recent information.
+    """
+
+    results = market_search_tool.invoke(query)
+
+    return str(results)
 
 
 class AgentTask(BaseModel):
@@ -58,14 +128,30 @@ class CompetitorAnalysis(BaseModel):
 
 
 class CustomerResearch(BaseModel):
-    
-    """This class defines the structure of Customer Research agent. It will conduct customer research mainly through the llm itself instead of web search and provide insights on customer needs, preferences, and behavior."""
 
-    customer_needs: str = Field(description = "This will contain the needs of the customers. It will be a string that describes the needs in terms of product features, pricing, marketing strategies, or any other relevant metric.")
-    customer_preferences: str = Field(description = "This will contain the preferences of the customers. It will be a string that describes the preferences in terms of product features, pricing, marketing strategies, or any other relevant metric.")
-    customer_behavior: str = Field(description = "This will contain the behavior of the customers. It will be a string that describes the behavior in terms of product features, pricing, marketing strategies, or any other relevant metric.")
-    key_insights: str = Field(description = "This will contain the key insights of the customer research. It will be a string that summarizes the customer research in terms of key findings, insights, and recommendations.")
+    customer_personas: str = Field(
+        description="Primary target customer segments."
+    )
 
+    pain_points: str = Field(
+        description="Major pain points customers face."
+    )
+
+    feature_requests: str = Field(
+        description="Frequently requested features from users."
+    )
+
+    buying_motivation: str = Field(
+        description="Why customers would buy this product."
+    )
+
+    objections: str = Field(
+        description="Reasons customers may avoid using the product."
+    )
+
+    summary: str = Field(
+        description="Overall customer research summary."
+    )
 
 class BuisnessModel(BaseModel):
     
@@ -134,11 +220,26 @@ technical_architecture_llm = llm.with_structured_output(TechnicalArchitecture)
 risk_analysis_llm = llm.with_structured_output(RiskAnalysis)
 pitch_deck_llm = llm.with_structured_output(pitchDeck)
 buisness_model_llm = llm.with_structured_output(BuisnessModel)
+reddit_query_llm = llm.with_structured_output(RedditQueries)
 
 
 
+def generate_reddit_queries(idea: str):
 
+    prompt = f"""
+    You are a product researcher.
 
+    Generate 5 Reddit search queries that will help understand
+    customer pain points for this startup.
+
+    Startup Idea:
+
+    {idea}
+
+    Only return the queries.
+    """
+
+    return reddit_query_llm.invoke(prompt)
 
 
 
@@ -160,89 +261,131 @@ def VentureManagerAgent(state: AgentState):
 
 def MarketResearchAgent(state: AgentState):
 
-    task = state["venture_manager_output"].market_research
-
-    system_prompt = """
-    You are an expert Market Research Consultant.
-
-    Your responsibility is to perform only the assigned market research task.
-
-    Return the output strictly in the MarketResearch schema.
+    """
+    Conducts market research using live web search
+    and summarizes the findings using Gemini.
     """
 
-    human_prompt = f"""
+    task = state["venture_manager_output"].market_research
+
+    idea = state["idea"]
+
+    # -------------------------------
+    # Live Market Search
+    # -------------------------------
+
+    market_data = search_market_data(idea)
+
+    # -------------------------------
+    # Prompt
+    # -------------------------------
+
+    prompt = f"""
+    You are an expert Market Research Analyst.
+
+    Your assigned task is:
+
     Objective:
     {task.objective}
 
     Instructions:
     {task.instructions}
+
+    Below are LIVE web search results collected from the internet.
+
+    Use these as your PRIMARY source of information.
+
+    If information is missing, make reasonable assumptions.
+
+    Search Results:
+
+    {market_data}
+
+    Return ONLY the MarketResearch structured output.
     """
 
-    output = market_research_llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
+    output = market_research_llm.invoke(prompt)
 
-
-]
+    return {
+        "market_research_output": output
+    }
     
-)
-    return {"market_research_output": output}
 
 def CompetitorAnalysisAgent(state: AgentState):
 
     task = state["venture_manager_output"].competitor_analysis
 
-    system_prompt = """
-    You are an expert Competitor Analysis Consultant.
+    competitor_data = search_competitors(state["idea"])
 
-    Your responsibility is to perform only the assigned competitor analysis task.
+    prompt = f"""
+    You are a Competitor Research expert.
 
-    Return the output strictly in the CompetitorAnalysis schema.
-    """
-
-    human_prompt = f"""
     Objective:
     {task.objective}
 
     Instructions:
     {task.instructions}
+
+    Competitor Search Results:
+
+    {competitor_data}
+
+    Return ONLY CompetitorAnalysis schema.
     """
 
-    output = competitor_analysis_llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
-]
-    
-)
-    return {"competitor_analysis_output": output}
+    output = competitor_analysis_llm.invoke(prompt)
+
+    return {
+        "competitor_analysis_output": output
+    }
     
 def CustomerResearchAgent(state: AgentState):
 
     task = state["venture_manager_output"].customer_research
 
-    system_prompt = """
-    You are an expert Customer Research Consultant.
+    # Generate search queries
+    reddit_queries = generate_reddit_queries(
+        state["idea"]
+    )
 
-    Your responsibility is to perform only the assigned customer research task.
+    # Search Reddit
+    reddit_data = search_reddit(
+        reddit_queries.queries
+    )
 
-    Return the output strictly in the CustomerResearch schema.
-    """
+    prompt = f"""
+You are an expert Product Researcher.
 
-    human_prompt = f"""
-    Objective:
-    {task.objective}
+Task:
 
-    Instructions:
-    {task.instructions}
-    """
+Objective:
+{task.objective}
 
-    output = customer_research_llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
-]
-   
-)
-    return {"customer_research_output": output}
+Instructions:
+{task.instructions}
+
+Below are Reddit discussions collected from users.
+
+Extract:
+
+- Personas
+- Pain Points
+- Feature Requests
+- Buying Motivation
+- Objections
+
+Reddit Discussions:
+
+{reddit_data}
+
+Return ONLY CustomerResearch schema.
+"""
+
+    output = customer_research_llm.invoke(prompt)
+
+    return {
+        "customer_research_output": output
+    }
 
 
 def BuisnessModelAgent(state: AgentState):
