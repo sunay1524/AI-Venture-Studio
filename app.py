@@ -84,6 +84,52 @@ def display_model(model):
 
         st.divider()
 
+def generate_markdown_report(idea, final_state):
+    report = f"""# 🚀 AI Venture Studio Startup Report
+
+## 💡 Startup Idea
+{idea}
+
+---
+
+## 📈 Market Research
+"""
+    mr = final_state.get("market_research_output")
+    if mr:
+        report += f"### Market Size\n{mr.market_size}\n\n### Growth Potential\n{mr.growth_potential}\n\n### Competitive Landscape\n{mr.competitive_landscape}\n\n### Key Insights\n{mr.key_insights}\n\n"
+
+    report += "---\n\n## 🏢 Competitor Analysis\n"
+    ca = final_state.get("competitor_analysis_output")
+    if ca:
+        report += f"### Competitor Strengths\n{ca.competitor_strengths}\n\n### Competitor Weaknesses\n{ca.competitor_weaknesses}\n\n### Competitor Strategies\n{ca.competitor_strategies}\n\n### Key Insights\n{ca.key_insights}\n\n"
+
+    report += "---\n\n## 👥 Customer Research\n"
+    cr = final_state.get("customer_research_output")
+    if cr:
+        report += f"### Customer Personas\n{cr.customer_personas}\n\n### Pain Points\n{cr.pain_points}\n\n### Feature Requests\n{cr.feature_requests}\n\n### Buying Motivation\n{cr.buying_motivation}\n\n### Objections\n{cr.objections}\n\n### Summary\n{cr.summary}\n\n"
+
+    report += "---\n\n## 💼 Business Model\n"
+    bm = final_state.get("buisness_model_output")
+    if bm:
+        report += f"### Value Proposition\n{bm.value_proposition}\n\n### Revenue Model\n{bm.revenue_model}\n\n### Cost Structure\n{bm.cost_structure}\n\n### Key Partners\n{bm.key_partners}\n\n### Key Activities\n{bm.key_activities}\n\n### Key Resources\n{bm.key_resources}\n\n### Key Insights\n{bm.key_insights}\n\n"
+
+    report += "---\n\n## 🏗 Technical Architecture\n"
+    ta = final_state.get("technical_architecture_output")
+    if ta:
+        report += f"### Feasibility\n{'✅ Feasible' if ta.feasibility else '❌ Not Feasible'}\n\n### Architecture Diagram Description\n{ta.architecture_diagram}\n\n### Technology Stack\n{ta.technology_stack}\n\n### Key Insights\n{ta.key_insights}\n\n"
+
+    report += "---\n\n## ⚠ Risk Analysis\n"
+    ra = final_state.get("risk_analysis_output")
+    if ra:
+        report += f"### Risk Acceptance\n{'✅ Acceptable' if ra.risk_acceptance else '⚠ High'}\n\n### Risk Identification\n{ra.risk_identification}\n\n### Risk Assessment\n{ra.risk_assessment}\n\n### Risk Mitigation\n{ra.risk_mitigation}\n\n### Key Insights\n{ra.key_insights}\n\n"
+
+    report += "---\n\n## 🎤 Pitch Deck\n"
+    pd = final_state.get("pitch_deck_output")
+    if pd:
+        report += f"### Pitch Deck Outline\n{pd.pitch_deck}\n\n### Key Insights\n{pd.key_insights}\n\n"
+
+    return report
+
 # --------------------------------------------------
 # BUTTON
 # --------------------------------------------------
@@ -153,6 +199,7 @@ if st.button("🚀 Analyze Startup", use_container_width=True):
         final_state.update(event[node])
 
         progress.progress(
+
             min(len(completed)/total_nodes,1.0)
         )
 
@@ -211,9 +258,25 @@ if st.button("🚀 Analyze Startup", use_container_width=True):
     with col3:
 
         st.metric(
+
             "Agents Completed",
             f"{len(completed)}/{total_nodes}"
         )
+
+    st.divider()
+
+    # --------------------------------------------------
+    # EXPORT REPORT
+    # --------------------------------------------------
+
+    markdown_report = generate_markdown_report(idea, final_state)
+    st.download_button(
+        label="📥 Download Full Report (Markdown)",
+        data=markdown_report,
+        file_name="startup_analysis_report.md",
+        mime="text/markdown",
+        use_container_width=True
+    )
 
     st.divider()
 

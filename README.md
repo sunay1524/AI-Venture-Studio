@@ -42,6 +42,8 @@ AI Venture Studio transforms a startup idea into a comprehensive investor-ready 
 
 ✅ Interactive Streamlit Dashboard
 
+✅ Markdown Report Export (Download completed reports instantly)
+
 ---
 
 # 🧠 Architecture
@@ -300,7 +302,6 @@ streamlit run app.py
 
 # 🎯 Future Improvements
 
-- PDF Report Export
 - Investor Score
 - Financial Projection Agent
 - Live Citations
