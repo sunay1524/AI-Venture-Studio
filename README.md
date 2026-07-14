@@ -231,7 +231,7 @@ Final Report
 |-----------|--------------|
 | Language | Python |
 | Agent Framework | LangGraph |
-| LLM | Gemini 2.5 Flash |
+| LLM | Gemini 3.1 Flash |
 | AI Framework | LangChain |
 | Search Tool | Tavily |
 | Customer Research | Reddit Search |
