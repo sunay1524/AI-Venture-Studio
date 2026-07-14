@@ -12,6 +12,12 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
+# SESSION STATE INITIALIZATION
+# --------------------------------------------------
+if "startup_idea" not in st.session_state:
+    st.session_state["startup_idea"] = ""
+
+# --------------------------------------------------
 # CSS
 # --------------------------------------------------
 
@@ -26,13 +32,53 @@ st.markdown("""
 .stButton>button{
     width:100%;
     height:3.2rem;
-    font-size:18px;
+    font-size:16px;
     font-weight:bold;
-    border-radius:10px;
+    border-radius:12px;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%) !important;
+    color: white !important;
+    border: none !important;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.stButton>button:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.5);
+    background: linear-gradient(135deg, #4338CA 0%, #6D28D9 100%) !important;
+}
+
+div[data-testid="stMetricValue"] {
+    font-size: 24px;
+    font-weight: bold;
+    color: #6366F1;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
+# --------------------------------------------------
+# SIDEBAR
+# --------------------------------------------------
+
+with st.sidebar:
+    st.markdown("## 🚀 AI Venture Studio")
+    st.caption("Multi-Agent Startup Consultant")
+    st.markdown("---")
+    
+    st.subheader("💡 Sample Ideas")
+    templates = {
+        "🧠 AI Interview Coach": "Build an AI platform that helps students prepare for interviews by conducting mock interviews, analyzing their voice and body language, and providing real-time constructive feedback.",
+        "🚜 Smart Farming IoT": "An IoT and AI platform for precision agriculture that monitors soil moisture, temperature, and crop health using sensors, recommending optimal watering and fertilizer schedules to farmers.",
+        "⚖️ AI Legal Auditor": "A SaaS application that uses LLMs to automatically audit contracts, lease agreements, and terms of service, highlighting risky clauses and suggesting edits."
+    }
+    for name, desc in templates.items():
+        if st.button(name, use_container_width=True):
+            st.session_state["startup_idea"] = desc
+            st.rerun()
+
+    st.markdown("---")
+    st.info("💡 **How it works:**\nThis system orchestrates 8 AI agents using LangGraph & Gemini to research, design, and assess the feasibility of your business idea.")
 
 # --------------------------------------------------
 # HEADER
@@ -50,8 +96,9 @@ st.caption(
 
 idea = st.text_area(
     "💡 Describe your Startup Idea",
-    height=220,
-    placeholder="Example:\nBuild an AI platform that helps students prepare for interviews..."
+    value=st.session_state["startup_idea"],
+    height=200,
+    placeholder="Select a sample idea from the sidebar or enter your own..."
 )
 
 # --------------------------------------------------
@@ -59,30 +106,21 @@ idea = st.text_area(
 # --------------------------------------------------
 
 def display_model(model):
-
     """
     Beautifully display any Pydantic model.
     """
-
     for key, value in model.model_dump().items():
-
         title = key.replace("_", " ").title()
-
-        st.subheader(title)
-
-        if isinstance(value, bool):
-
-            if value:
-                st.success("✅ Yes")
-
+        
+        with st.container(border=True):
+            st.markdown(f"##### 🔹 {title}")
+            if isinstance(value, bool):
+                if value:
+                    st.markdown("<span style='color:#10B981; font-weight:bold; font-size:18px;'>✅ Yes</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<span style='color:#EF4444; font-weight:bold; font-size:18px;'>❌ No</span>", unsafe_allow_html=True)
             else:
-                st.error("❌ No")
-
-        else:
-
-            st.write(value)
-
-        st.divider()
+                st.markdown(value)
 
 def generate_markdown_report(idea, final_state):
     report = f"""# 🚀 AI Venture Studio Startup Report
@@ -134,7 +172,7 @@ def generate_markdown_report(idea, final_state):
 # BUTTON
 # --------------------------------------------------
 
-if st.button("🚀 Analyze Startup", use_container_width=True):
+if st.button("🚀 Analyze Startup Idea", use_container_width=True):
 
     if idea.strip() == "":
         st.warning("Please enter a startup idea.")
