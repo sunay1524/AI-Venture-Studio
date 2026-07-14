@@ -13,6 +13,9 @@ from langchain_tavily import TavilySearch
 load_dotenv()
 
 
+# ---------------------------------------------------------------------------
+# Default tools (use env-var keys — only used when no BYOK key is provided)
+# ---------------------------------------------------------------------------
 market_search_tool = TavilySearch(max_results=3)
 competitor_search_tool = TavilySearch(max_results=3)
 customer_search_tool = TavilySearch(max_results=3)
@@ -211,16 +214,19 @@ class AgentState(TypedDict):
     pitch_deck_output : pitchDeck
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
-venture_manager_llm = llm.with_structured_output(VentureManager)
-market_research_llm = llm.with_structured_output(MarketResearch)
-competitor_analysis_llm = llm.with_structured_output(CompetitorAnalysis)
-customer_research_llm = llm.with_structured_output(CustomerResearch)
-technical_architecture_llm = llm.with_structured_output(TechnicalArchitecture)
-risk_analysis_llm = llm.with_structured_output(RiskAnalysis)
-pitch_deck_llm = llm.with_structured_output(pitchDeck)
-buisness_model_llm = llm.with_structured_output(BuisnessModel)
-reddit_query_llm = llm.with_structured_output(RedditQueries)
+# ---------------------------------------------------------------------------
+# Default LLMs (env-var key) — overridden per-session when BYOK key is used
+# ---------------------------------------------------------------------------
+_default_llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite", temperature=0)
+venture_manager_llm = _default_llm.with_structured_output(VentureManager)
+market_research_llm = _default_llm.with_structured_output(MarketResearch)
+competitor_analysis_llm = _default_llm.with_structured_output(CompetitorAnalysis)
+customer_research_llm = _default_llm.with_structured_output(CustomerResearch)
+technical_architecture_llm = _default_llm.with_structured_output(TechnicalArchitecture)
+risk_analysis_llm = _default_llm.with_structured_output(RiskAnalysis)
+pitch_deck_llm = _default_llm.with_structured_output(pitchDeck)
+buisness_model_llm = _default_llm.with_structured_output(BuisnessModel)
+reddit_query_llm = _default_llm.with_structured_output(RedditQueries)
 
 
 
@@ -530,14 +536,56 @@ graph.add_edge("pitch_deck", END)
 agent = graph.compile()
 
 
-def run_agent(idea: str):
+def run_agent(idea: str, gemini_api_key: str = None, tavily_api_key: str = None):
+    """
+    Run the venture studio agent pipeline.
+
+    If gemini_api_key / tavily_api_key are provided they are used for this
+    invocation only (BYOK mode). Otherwise the environment-level defaults
+    are used.
+    """
+    global venture_manager_llm, market_research_llm, competitor_analysis_llm
+    global customer_research_llm, technical_architecture_llm, risk_analysis_llm
+    global pitch_deck_llm, buisness_model_llm, reddit_query_llm
+    global market_search_tool, competitor_search_tool, customer_search_tool
+
+    if gemini_api_key:
+        session_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash-lite",
+            temperature=0,
+            google_api_key=gemini_api_key
+        )
+        venture_manager_llm = session_llm.with_structured_output(VentureManager)
+        market_research_llm = session_llm.with_structured_output(MarketResearch)
+        competitor_analysis_llm = session_llm.with_structured_output(CompetitorAnalysis)
+        customer_research_llm = session_llm.with_structured_output(CustomerResearch)
+        technical_architecture_llm = session_llm.with_structured_output(TechnicalArchitecture)
+        risk_analysis_llm = session_llm.with_structured_output(RiskAnalysis)
+        pitch_deck_llm = session_llm.with_structured_output(pitchDeck)
+        buisness_model_llm = session_llm.with_structured_output(BuisnessModel)
+        reddit_query_llm = session_llm.with_structured_output(RedditQueries)
+    else:
+        # Reset to env-var defaults
+        venture_manager_llm = _default_llm.with_structured_output(VentureManager)
+        market_research_llm = _default_llm.with_structured_output(MarketResearch)
+        competitor_analysis_llm = _default_llm.with_structured_output(CompetitorAnalysis)
+        customer_research_llm = _default_llm.with_structured_output(CustomerResearch)
+        technical_architecture_llm = _default_llm.with_structured_output(TechnicalArchitecture)
+        risk_analysis_llm = _default_llm.with_structured_output(RiskAnalysis)
+        pitch_deck_llm = _default_llm.with_structured_output(pitchDeck)
+        buisness_model_llm = _default_llm.with_structured_output(BuisnessModel)
+        reddit_query_llm = _default_llm.with_structured_output(RedditQueries)
+
+    if tavily_api_key:
+        market_search_tool = TavilySearch(max_results=3, tavily_api_key=tavily_api_key)
+        competitor_search_tool = TavilySearch(max_results=3, tavily_api_key=tavily_api_key)
+        customer_search_tool = TavilySearch(max_results=3, tavily_api_key=tavily_api_key)
+    else:
+        market_search_tool = TavilySearch(max_results=3)
+        competitor_search_tool = TavilySearch(max_results=3)
+        customer_search_tool = TavilySearch(max_results=3)
+
     return agent.stream(
-        {
-            "idea": idea
-        },
+        {"idea": idea},
         stream_mode="updates"
     )
-
-#print(result['venture_manager_output'])
-#print(result["pitch_deck_output"])
-#rint(result["risk_analysis_output"].risk_acceptance)

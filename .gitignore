@@ -12,3 +12,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Rate limiting counter (auto-generated, not committed)
+usage.json

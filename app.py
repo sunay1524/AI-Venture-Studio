@@ -1,5 +1,39 @@
 import streamlit as st
+import json
+import os
+from datetime import date
 from venture_studio import run_agent
+
+# --------------------------------------------------
+# RATE LIMITING
+# --------------------------------------------------
+
+DAILY_LIMIT = 10  # max free analyses per day
+USAGE_FILE = os.path.join(os.path.dirname(__file__), "usage.json")
+
+def _load_usage() -> dict:
+    if os.path.exists(USAGE_FILE):
+        with open(USAGE_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def _save_usage(data: dict):
+    with open(USAGE_FILE, "w") as f:
+        json.dump(data, f)
+
+def get_daily_count() -> int:
+    data = _load_usage()
+    today = str(date.today())
+    return data.get(today, 0)
+
+def increment_daily_count():
+    data = _load_usage()
+    today = str(date.today())
+    data[today] = data.get(today, 0) + 1
+    _save_usage(data)
+
+def is_rate_limited() -> bool:
+    return get_daily_count() >= DAILY_LIMIT
 
 # --------------------------------------------------
 # PAGE CONFIG
@@ -65,7 +99,40 @@ with st.sidebar:
     st.markdown("## 🚀 AI Venture Studio")
     st.caption("Multi-Agent Startup Consultant")
     st.markdown("---")
-    
+
+    # ---- BYOK Section ----
+    st.subheader("🔑 Your API Keys (Optional)")
+    st.caption(
+        "Enter your own keys to bypass the daily limit. "
+        "Keys are **never stored** — used only for your session."
+    )
+
+    user_gemini_key = st.text_input(
+        "Gemini API Key",
+        type="password",
+        placeholder="AIza...",
+        help="Get a free key at https://aistudio.google.com/app/apikey"
+    )
+    user_tavily_key = st.text_input(
+        "Tavily API Key",
+        type="password",
+        placeholder="tvly-...",
+        help="Get a free key at https://app.tavily.com/"
+    )
+
+    using_own_keys = bool(user_gemini_key and user_tavily_key)
+
+    if using_own_keys:
+        st.success("✅ Using your own keys — no rate limit!")
+    else:
+        remaining = max(0, DAILY_LIMIT - get_daily_count())
+        if remaining > 0:
+            st.info(f"🎁 **{remaining}/{DAILY_LIMIT}** free analyses left today.")
+        else:
+            st.error("⛔ Daily free limit reached. Add your own API keys above to continue.")
+
+    st.markdown("---")
+
     st.subheader("💡 Sample Ideas")
     templates = {
         "🧠 AI Interview Coach": "Build an AI platform that helps students prepare for interviews by conducting mock interviews, analyzing their voice and body language, and providing real-time constructive feedback.",
@@ -178,6 +245,20 @@ if st.button("🚀 Analyze Startup Idea", use_container_width=True):
         st.warning("Please enter a startup idea.")
         st.stop()
 
+    # ---------- Rate limit check ----------
+    if not using_own_keys and is_rate_limited():
+        st.error(
+            "⛔ **Daily free limit reached** for today.\n\n"
+            "To continue, add your own **Gemini** and **Tavily** API keys in the sidebar.\n\n"
+            "- 🔑 [Get Gemini key (free)](https://aistudio.google.com/app/apikey)\n"
+            "- 🔑 [Get Tavily key (free)](https://app.tavily.com/)"
+        )
+        st.stop()
+
+    # Increment counter only for users on the shared key
+    if not using_own_keys:
+        increment_daily_count()
+
     left, right = st.columns([1,3])
 
     # --------------------------------------------------
@@ -228,7 +309,11 @@ if st.button("🚀 Analyze Startup Idea", use_container_width=True):
     # STREAM EVENTS
     # --------------------------------------------------
 
-    for event in run_agent(idea):
+    for event in run_agent(
+        idea,
+        gemini_api_key=user_gemini_key if using_own_keys else None,
+        tavily_api_key=user_tavily_key if using_own_keys else None
+    ):
 
         node = list(event.keys())[0]
 
