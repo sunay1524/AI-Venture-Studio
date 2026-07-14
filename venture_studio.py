@@ -217,7 +217,7 @@ class AgentState(TypedDict):
 # ---------------------------------------------------------------------------
 # Default LLMs (env-var key) — overridden per-session when BYOK key is used
 # ---------------------------------------------------------------------------
-_default_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0)
+_default_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
 venture_manager_llm = _default_llm.with_structured_output(VentureManager)
 market_research_llm = _default_llm.with_structured_output(MarketResearch)
 competitor_analysis_llm = _default_llm.with_structured_output(CompetitorAnalysis)
@@ -551,7 +551,7 @@ def run_agent(idea: str, gemini_api_key: str = None, tavily_api_key: str = None)
 
     if gemini_api_key:
         session_llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash-lite",
+            model="gemini-1.5-flash",
             temperature=0,
             google_api_key=gemini_api_key
         )
